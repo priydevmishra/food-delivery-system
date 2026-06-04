@@ -1,0 +1,19 @@
+{
+  "name": "food-delivery-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:notification": "npm run dev --workspace=packages/notification-service",
+    "dev:location":     "npm run dev --workspace=packages/location-service",
+    "dev:delivery":     "npm run dev --workspace=packages/delivery-service",
+    "dev:frontend":     "npm run dev --workspace=packages/frontend",
+    "dev:all":          "concurrently \"npm run dev:notification\" \"npm run dev:location\" \"npm run dev:delivery\" \"npm run dev:frontend\"",
+    "install:all":      "npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

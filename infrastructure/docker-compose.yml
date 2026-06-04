@@ -1,0 +1,181 @@
+services:
+
+  # ───────────────── Infrastructure ─────────────────
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+
+    ports:
+      - "6379:6379"
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+
+    depends_on:
+      - zookeeper
+
+    ports:
+      - "9092:9092"
+
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  # ───────────────── Notification Service ─────────────────
+
+  notification-service:
+    container_name: notification-service
+
+    build:
+      context: ..
+      dockerfile: packages/notification-service/Dockerfile
+
+    ports:
+      - "3003:3003"
+
+    environment:
+      PORT: 3003
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      NODE_ENV: development
+
+    depends_on:
+      - rabbitmq
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  # ───────────────── Location Service ─────────────────
+
+  location-service:
+    container_name: location-service
+
+    build:
+      context: ..
+      dockerfile: packages/location-service/Dockerfile
+
+    ports:
+      - "3004:3004"
+
+    environment:
+      PORT: 3004
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+
+    depends_on:
+      - redis
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  # ───────────────── Delivery Service ─────────────────
+
+  delivery-service:
+    container_name: delivery-service
+
+    build:
+      context: ..
+      dockerfile: packages/delivery-service/Dockerfile
+
+    ports:
+      - "3005:3005"
+
+    environment:
+      PORT: 3005
+      KAFKA_BROKER: kafka:9092
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      LOCATION_SERVICE_URL: http://location-service:3004
+      NODE_ENV: development
+
+    depends_on:
+      - kafka
+      - rabbitmq
+      - location-service
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+  # ───────────────── Nginx Gateway ─────────────────
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+    depends_on:
+      - notification-service
+      - location-service
+      - delivery-service
+
+    restart: unless-stopped
+
+    networks:
+      - food-delivery-net
+
+
+# ───────────────── Networks ─────────────────
+
+networks:
+  food-delivery-net:
+    driver: bridge

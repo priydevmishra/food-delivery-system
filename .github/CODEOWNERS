@@ -1,0 +1,25 @@
+# Each team member owns their folders
+
+# Your services
+/packages/notification-service/   @your-github-username
+/packages/location-service/        @your-github-username
+/packages/delivery-service/        @your-github-username
+/packages/frontend/src/features/delivery/      @your-github-username
+/packages/frontend/src/features/notifications/ @your-github-username
+/packages/frontend/src/features/location/      @your-github-username
+/packages/frontend/src/store/slices/deliverySlice.js      @your-github-username
+/packages/frontend/src/store/slices/locationSlice.js      @your-github-username
+/packages/frontend/src/store/slices/notificationSlice.js  @your-github-username
+
+# Partner services
+/packages/auth-service/            @partner-github-username
+/packages/order-service/           @partner-github-username
+/packages/restaurant-service/      @partner-github-username
+/packages/payment-service/         @partner-github-username
+/packages/frontend/src/features/auth/    @partner-github-username
+/packages/frontend/src/features/orders/ @partner-github-username
+
+# Shared — both must review PRs
+/packages/shared/                  @your-github-username @partner-github-username
+/infrastructure/                   @your-github-username @partner-github-username
+/packages/frontend/src/store/index.js  @your-github-username @partner-github-username
